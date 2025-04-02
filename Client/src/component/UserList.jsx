@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import {  AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { Trash2 } from 'lucide-react';
 import { useState } from 'react';
