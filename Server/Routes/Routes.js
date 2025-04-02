@@ -1,6 +1,6 @@
 const { getMembershipPlan } = require('../Controllers/memberships.controller');
 const { insertInSubscription, getSubscriptedUsersFromSubscription } = require('../Controllers/subscription.controller');
-const { addUser, getAllUser, updateUserById } = require('../Controllers/Users');
+const { addUser, getAllUser, updateUserById } = require('../Controllers/Users.controller');
 const app = require('express').Router();
 
 //! users table
