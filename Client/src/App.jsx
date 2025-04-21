@@ -1,14 +1,16 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import AddUserForm from './component/AddUserForm';
-import UserList from './component/UserList';
+/* eslint-disable no-unused-vars */
+import { useState, useEffect } from "react";
+import axios from "axios";
+import AddUserForm from "./component/AddUserForm";
+import UserList from "./component/UserList";
+import ParticlesBackground from "./component/ParticlesBackground";
 
 function App() {
   const [users, setUsers] = useState([]);
 
   const getAllUsers = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/users');
+      const response = await axios.get("http://localhost:3000/users");
       setUsers(response.data);
     } catch (err) {
       console.log(err);
@@ -20,10 +22,14 @@ function App() {
   }, []);
 
   return (
-    <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-r from-black  to-gray-800 p-6">
-      <AddUserForm refreshUsers={getAllUsers} />
-      <UserList users={users} />
-    </div>
+    // <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-r from-black  to-gray-800 p-6">
+    //   <ParticlesBackground />
+    //   {/* // <AddUserForm refreshUsers={getAllUsers} />
+    //   // <UserList users={users} /> */}
+    // </div>
+    <>
+      <ParticlesBackground />
+    </>
   );
 }
 

@@ -1,7 +1,9 @@
+/* eslint-disable no-unused-vars */
 import {  AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 
 const UserList = ({ users, refreshUsers }) => {
   const [loadingId, setLoadingId] = useState(null);
