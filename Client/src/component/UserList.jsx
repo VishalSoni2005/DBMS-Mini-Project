@@ -34,6 +34,7 @@ const UserList = ({ users, refreshUsers }) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
+      
       <h2 className="text-xl font-bold text-center text-gray-700 mb-3">User List</h2>
 
       {/* User List */}
