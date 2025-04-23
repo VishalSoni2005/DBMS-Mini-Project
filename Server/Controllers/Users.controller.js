@@ -28,7 +28,7 @@ const addUser = async (req, res) => {
       phone,
       password,
       role = "member",
-      join_date = new Date(),
+      // join_date = new Date(),
     } = req.body;
 
     createUser(name, email, phone, password, (err, result) => {
