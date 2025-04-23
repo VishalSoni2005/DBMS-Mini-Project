@@ -21,7 +21,7 @@ const ParticlesBackground = () => {
           zIndex: -1,
         },
         particles: {
-          number: { value: 300, density: { enable: true, area: 1000 } },
+          number: { value: 3000, density: { enable: true, area: 1000 } },
           color: {
             value: ["#ffffff", "#00ffff", "#ffcc00", "#ff0000", "#121343"],
           },
