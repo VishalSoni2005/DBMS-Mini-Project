@@ -26,9 +26,9 @@ const Header = () => {
           </li>
           <li className="flex">
             <Link
-              to="/logout"
+              to="/Attendance"
               className="flex items-center px-4 -mb-1 border-b-2 border-transparent hover:border-white transition">
-              Logout
+              Attendance
             </Link>
           </li>
           <li className="flex">
@@ -43,6 +43,13 @@ const Header = () => {
               to="/memberships"
               className="flex items-center px-4 -mb-1 border-b-2 border-transparent hover:border-white transition">
               Memberships
+            </Link>
+          </li>
+          <li className="flex">
+            <Link
+              to="/contact"
+              className="flex items-center px-4 -mb-1 border-b-2 border-transparent hover:border-white transition">
+              Contact
             </Link>
           </li>
         </ul>

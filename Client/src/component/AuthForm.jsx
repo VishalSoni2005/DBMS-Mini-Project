@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import { userAuthStore } from "../store/userAuthStore";
+// import { userAuthStore } from "../store/userAuthStore";
+import { toast } from "sonner";
+import axios from 'axios';
 
 export default function GymRegistrationForm() {
   const [name, setName] = useState("");
@@ -8,29 +10,34 @@ export default function GymRegistrationForm() {
   const [phone, setPhone] = useState("");
   const [joinDate, setJoinDate] = useState("");
 
-  const { registerUser } = userAuthStore();
+  // const { registerUser } = userAuthStore();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const joinDateStr = joinDate;
+    // const joinDateStr = joinDate;
 
-    const dateObj = new Date(joinDateStr); // creates a Date object
+    // const dateObj = new Date(joinDateStr); // creates a Date object
+    // // const formattedDate = dateObj.toISOString().slice(0, 10); // => "2025-04-23"
     // const formattedDate = dateObj.toISOString().slice(0, 10); // => "2025-04-23"
-    const formattedDate = dateObj.toISOString().slice(0, 10); // => "2025-04-23"
 
     const userData = {
       name,
       email,
       password,
       phone,
-      joinDate: formattedDate,
+      // joinDate: formattedDate,
     };
 
     try {
-      console.log("User Data:", userData); // Log the user data to the console
+      // console.log("User Data:", userData); // Log the user data to the console
 
-      await registerUser(userData);
+
+      // await registerUser(userData);
+      const response = await axios.post("http://localhost:3000/register", userData);
+      console.log("User registered successfully:", response.data);
+      toast.success("User registered successfully!");
+
       setName("");
       setEmail("");
       setPassword("");

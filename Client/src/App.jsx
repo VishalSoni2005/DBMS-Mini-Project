@@ -9,6 +9,7 @@ import { Route, Routes } from "react-router";
 import Contact from './pages/Contact';
 import AuthForm from "./component/AuthForm";
 import GetMemberships from './component/GetMemberships';
+import Attendance from './component/Attendance';
 
 
 function App() {
@@ -49,6 +50,10 @@ function App() {
         <Route
           path="/memberships"
           element={<GetMemberships />}
+        />
+        <Route
+          path="/attendance"
+          element={<Attendance />}
         />
       </Routes>
     </>
