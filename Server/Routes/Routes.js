@@ -15,7 +15,7 @@ const {
 const app = require("express").Router();
 
 //! users table
-app.post("/users", addUser);
+app.post("/register", addUser);
 app.get("/users", getAllUser);
 app.put("/users/:id", updateUserById);
 

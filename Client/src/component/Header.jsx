@@ -1,15 +1,21 @@
 import React from "react";
-import { Link } from "react-router"
+import { Link, useNavigate } from "react-router";
 
 const Header = () => {
+  const redirect = useNavigate();
+
   return (
-    <header className="p-3 py-4 bg-violet-800 text-white">
+    <header className="p-3 py-4 bg-indigo-800 text-white">
       <div className="container flex justify-between h-12 mx-auto">
-        <img
-          src="/vite.svg"
-          className="h-8"
-          alt="Logo"
-        />
+        <button
+          className="flex items-center p-2 mr-6 sm:mr-0 cursor-pointer"
+          onClick={() => redirect("/")}>
+          <img
+            src="/vite.svg"
+            className="h-8"
+            alt="Logo"
+          />
+        </button>
         <ul className="items-stretch hidden space-x-3 md:flex">
           <li className="flex">
             <Link

@@ -7,6 +7,8 @@ import Hero from "./pages/Hero";
 import Header from "./component/Header";
 import { Route, Routes } from "react-router";
 import Contact from './pages/Contact';
+import AuthForm from "./component/AuthForm";
+
 
 function App() {
   // const [users, setUsers] = useState([]);
@@ -33,7 +35,7 @@ function App() {
         />
         <Route
           path="/register"
-          // element={<About />}
+          element={<AuthForm />}
         />
         <Route
           path="/contact"
