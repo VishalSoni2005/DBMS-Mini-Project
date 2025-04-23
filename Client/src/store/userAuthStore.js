@@ -11,11 +11,7 @@ export const userAuthStore = create((set) => ({
   registerUser: async(userDate) => {
     try {
 
-      const response = axios.post(`${serverUrl}/register`, userDate, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = axios.post(`${serverUrl}/register`, userDate);
 
       const data = response.result;
       set({ user: data, isLoggedIn: true });
@@ -23,6 +19,8 @@ export const userAuthStore = create((set) => ({
       
       
     } catch (error) {
+      console.log("Error registering user:", error);
+      
       console.error("Error registering user:", error);
       toast.error("Registration failed. Please try again.");
     }

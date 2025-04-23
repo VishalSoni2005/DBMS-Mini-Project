@@ -1,17 +1,18 @@
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-const UserList = () => {
-  const [users, setUsers] = useState([]);
+const GetMemberships = () => {
+  const [memberships, setMemberships] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     axios
-      .get("http://localhost:3000/users")
+      .get("http://localhost:3000/getMemberships")
       .then((res) => {
-        console.log("Fetched users:", res.data);
-        
-        setUsers(res.data);
+        console.log("Fetched memberships:", res.data);
+
+        setMemberships(res.data);
         setLoading(false);
       })
       .catch((err) => {
@@ -33,25 +34,25 @@ const UserList = () => {
             <tr>
               <th className="px-4 py-2 border">ID</th>
               <th className="px-4 py-2 border">Name</th>
-              <th className="px-4 py-2 border">Email</th>
-              <th className="px-4 py-2 border">Phone</th>
-              <th className="px-4 py-2 border">Role</th>
-              <th className="px-4 py-2 border">Join Date</th>
+              <th className="px-4 py-2 border">Price</th>
+              <th className="px-4 py-2 border">Duration</th>
+              <th className="px-4 py-2 border">Access Level</th>
+              <th className="px-4 py-2 border">Short Description</th>
             </tr>
           </thead>
           <tbody>
-            {users.map((user) => (
+            {memberships.map((plan) => (
               <tr
-                key={user.id}
+                key={plan.ID}
                 className="border-t">
-                <td className="px-4 py-2 border">{user.id}</td>
-                <td className="px-4 py-2 border">{user.name}</td>
-                <td className="px-4 py-2 border">{user.email}</td>
-                <td className="px-4 py-2 border">{user.phone}</td>
-                <td className="px-4 py-2 border">{user.role}</td>
+                <td className="px-4 py-2 border">{plan.ID}</td>
+                <td className="px-4 py-2 border">{plan.NAME}</td>
                 <td className="px-4 py-2 border">
-                  {new Date(user.joinDate).toLocaleDateString()}
+                  {`₹ ${plan.PRICE}`}
                 </td>
+                <td className="px-4 py-2 border">{plan.DURATION}</td>
+                <td className="px-4 py-2 border">{plan.ACCESS_lEVEL}</td>
+                <td className="px-4 py-2 border">{plan.DESCRIPTION}</td>
               </tr>
             ))}
           </tbody>
@@ -61,4 +62,4 @@ const UserList = () => {
   );
 };
 
-export default UserList;
+export default GetMemberships;

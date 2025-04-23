@@ -13,22 +13,30 @@ export default function GymRegistrationForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const joinDateStr = joinDate;
+
+    const dateObj = new Date(joinDateStr); // creates a Date object
+    // const formattedDate = dateObj.toISOString().slice(0, 10); // => "2025-04-23"
+    const formattedDate = dateObj.toISOString().slice(0, 10); // => "2025-04-23"
+
     const userData = {
       name,
       email,
       password,
       phone,
-      joinDate,
+      joinDate: formattedDate,
     };
 
     try {
+      console.log("User Data:", userData); // Log the user data to the console
+
       await registerUser(userData);
       setName("");
       setEmail("");
       setPassword("");
       setPhone("");
       setJoinDate("");
-    } catch (error) { 
+    } catch (error) {
       console.error("Error registering user:", error);
     }
   };

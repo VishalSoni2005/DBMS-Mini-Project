@@ -8,6 +8,7 @@ import Header from "./component/Header";
 import { Route, Routes } from "react-router";
 import Contact from './pages/Contact';
 import AuthForm from "./component/AuthForm";
+import GetMemberships from './component/GetMemberships';
 
 
 function App() {
@@ -40,6 +41,14 @@ function App() {
         <Route
           path="/contact"
           element={<Contact />}
+        />
+        <Route
+          path="/users"
+          element={<UserList />}
+        />
+        <Route
+          path="/memberships"
+          element={<GetMemberships />}
         />
       </Routes>
     </>
