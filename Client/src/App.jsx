@@ -10,26 +10,27 @@ import Contact from './pages/Contact';
 import AuthForm from "./component/AuthForm";
 import GetMemberships from './component/GetMemberships';
 import Attendance from './component/Attendance';
+import { Toaster } from 'sonner';
 
 
 function App() {
-  // const [users, setUsers] = useState([]);
 
-  // const getAllUsers = async () => {
-  //   try {
-  //     const response = await axios.get("http://localhost:3000/users");
-  //     setUsers(response.data);
-  //   } catch (err) {
-  //     console.log(err);
-  //   }
-  // };
 
   return (
     <>
+    <Toaster 
+    position="top-right" 
+    richColors
+    toastOptions={{
+      className: 'bg-gray-800 text-white',
+      style: {
+        background: '#1f2937',
+        color: '#fff',
+      },
+    }}
+    />
       <Header />
       {/* <ParticlesBackground className="fixed inset-0 z-[-1]" /> */}
-      {/* <Hero className="absolute " /> */}
-
       <Routes>
         <Route
           path="/"
