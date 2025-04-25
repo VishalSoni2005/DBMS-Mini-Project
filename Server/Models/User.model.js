@@ -10,14 +10,42 @@ const bcrypt = require('bcryptjs');
 
 // };
 
-const createUser = (name, email, phone, password, image_url=null) => {
+// const createUser = (name, email, phone, password, image_url=null) => {
+//   return new Promise(async (resolve, reject) => {
+//     try {
+//       const hashedPassword = await bcrypt.hash(password, 10);
+//       const sql = `INSERT INTO users (name, email, phone, password, image_url) VALUES (?, ?, ?, ?, ?)`;
+//       connection.query(
+//         sql,
+//         [name, email, phone, hashedPassword, image_url],
+//         (err, results) => {
+//           if (err) return reject(err);
+//           resolve(results);
+//         }
+//       );
+//     } catch (err) {
+//       reject(err);
+//     }
+//   });
+// };
+
+
+const createUser = (
+  name,
+  email,
+  phone,
+  password,
+  joinDate = null,
+  image_url = null
+) => {
   return new Promise(async (resolve, reject) => {
     try {
       const hashedPassword = await bcrypt.hash(password, 10);
-      const sql = `INSERT INTO users (name, email, phone, password, image_url) VALUES (?, ?, ?, ?, ?)`;
+      const sql = `INSERT INTO users (name, email, phone, password, join_date, image_url)
+                   VALUES (?, ?, ?, ?, ?, ?)`;
       connection.query(
         sql,
-        [name, email, phone, hashedPassword, image_url],
+        [name, email, phone, hashedPassword, joinDate, image_url],
         (err, results) => {
           if (err) return reject(err);
           resolve(results);
@@ -28,7 +56,6 @@ const createUser = (name, email, phone, password, image_url=null) => {
     }
   });
 };
-
 
 const getUsers = callback => {
   const result = connection.query('SELECT * FROM users', callback);

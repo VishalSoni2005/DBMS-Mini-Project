@@ -20,6 +20,33 @@ async function uploadToCloudinary(file, folder = "VishalSoni", quality) {
   }
 }
 
+// const addUser = async (req, res) => {
+//   try {
+//     const {
+//       name,
+//       email,
+//       phone,
+//       password,
+//       role = "member",
+//       // join_date = new Date(),
+//     } = req.body;
+
+//     createUser(name, email, phone, password, (err, result) => {
+//       if (err) return res.status(500).json({ error: err.message });
+//       res
+//         .status(201)
+//         .json({
+//           message: "User added!",
+//           userId: result.insertId,
+//           user: result,
+//         });
+//     });
+//   } catch (error) {
+//     console.error("Error in addUser:", error);
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
 const addUser = async (req, res) => {
   try {
     const {
@@ -31,15 +58,12 @@ const addUser = async (req, res) => {
       // join_date = new Date(),
     } = req.body;
 
-    createUser(name, email, phone, password, (err, result) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res
-        .status(201)
-        .json({
-          message: "User added!",
-          userId: result.insertId,
-          user: result,
-        });
+    const result = await createUser(name, email, phone, password);
+
+    res.status(201).json({
+      message: "User added!",
+      userId: result.insertId,
+      user: result,
     });
   } catch (error) {
     console.error("Error in addUser:", error);
