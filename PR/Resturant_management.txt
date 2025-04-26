@@ -1,0 +1,131 @@
+-- SC3: Online Restaurant Management System
+
+-- (Tables, Insertions, and Part A Queries already created above)
+
+-- ---------------------------------
+-- SC3 Part A Queries
+-- ---------------------------------
+
+-- ---------------------------------
+-- SC3 Part B Queries
+-- ---------------------------------
+
+-- 1. Total price of each item in order_ID 1
+SELECT 
+    item_name, quantity, unit_price, quantity * unit_price AS total_price
+FROM OrderItems
+WHERE order_ID = 1;
+
+-- 2. Names of all customers who have placed an order
+SELECT DISTINCT c.name
+FROM Customers c
+JOIN Orders o ON c.customer_ID = o.customer_ID
+WHERE o.customer_ID IS NOT NULL;
+
+-- 3. View: Order ID, item name, quantity, and total price per item
+CREATE VIEW DetailedOrderItems AS
+SELECT 
+    oi.order_ID,
+    oi.item_name,
+    oi.quantity,
+    oi.unit_price,
+    (oi.quantity * oi.unit_price) AS total_item_price
+FROM OrderItems oi;
+
+-- 4. Customers with orders containing both 'Pizza' and 'Burgers'
+SELECT DISTINCT c.customer_ID, c.name
+FROM Customers c
+WHERE c.customer_ID IN (
+    SELECT o.customer_ID
+    FROM Orders o
+    JOIN OrderItems oi ON o.order_ID = oi.order_ID
+    JOIN Menu m ON oi.item_ID = m.item_ID
+    WHERE m.category = 'Pizza'
+) 
+AND c.customer_ID IN (
+    SELECT o.customer_ID
+    FROM Orders o
+    JOIN OrderItems oi ON o.order_ID = oi.order_ID
+    JOIN Menu m ON oi.item_ID = m.item_ID
+    WHERE m.category = 'Burgers'
+);
+
+-- 5. Menu items never included in any order
+SELECT item_name
+FROM Menu
+WHERE item_ID NOT IN (
+    SELECT DISTINCT item_ID FROM OrderItems WHERE item_ID IS NOT NULL
+);
+
+-- 6. Function to check if an item is in a specific category
+DELIMITER //
+CREATE FUNCTION IsItemInCategory(p_item_name VARCHAR(255), p_category_name VARCHAR(100))
+RETURNS VARCHAR(200)
+DETERMINISTIC
+BEGIN
+    DECLARE item_count INT;
+    SELECT COUNT(*) INTO item_count
+    FROM Menu
+    WHERE item_name = p_item_name AND category = p_category_name;
+
+    IF item_count > 0 THEN
+        RETURN CONCAT(p_item_name, ' is in ', p_category_name);
+    ELSE
+        RETURN CONCAT(p_item_name, ' is not in ', p_category_name);
+    END IF;
+END //
+DELIMITER ;
+
+-- ---------------------------------
+-- SC3 Part C Queries
+-- ---------------------------------
+
+-- 1. Procedure to add a new menu item
+DELIMITER //
+CREATE PROCEDURE AddNewMenuItem (
+    IN p_item_name VARCHAR(255),
+    IN p_category VARCHAR(100),
+    IN p_price DECIMAL(10,2)
+)
+BEGIN
+    INSERT INTO Menu (item_name, category, price)
+    VALUES (p_item_name, p_category, p_price);
+END //
+DELIMITER ;
+
+-- 2. Highest and lowest priced items
+SELECT 
+    MAX(price) AS highest_price,
+    (SELECT item_name FROM Menu ORDER BY price DESC LIMIT 1) AS highest_price_item,
+    MIN(price) AS lowest_price,
+    (SELECT item_name FROM Menu ORDER BY price ASC LIMIT 1) AS lowest_price_item
+FROM Menu;
+
+-- 3. Number of items per category
+SELECT category, COUNT(*) AS number_of_items
+FROM Menu
+GROUP BY category;
+
+-- 4. Average number of items per order
+SELECT 
+    AVG(item_count) AS average_items_per_order
+FROM (
+    SELECT order_ID, COUNT(*) AS item_count
+    FROM OrderItems
+    GROUP BY order_ID
+) AS items_per_order;
+
+-- 5. View summarizing sales of each menu item
+CREATE VIEW MenuItemSalesSummary AS
+SELECT 
+    m.item_name,
+    SUM(oi.quantity) AS total_quantity_sold,
+    SUM(oi.quantity * oi.unit_price) AS total_revenue
+FROM Menu m
+JOIN OrderItems oi ON m.item_ID = oi.item_ID
+GROUP BY m.item_name;
+
+-- 6. Get names of all items in a specific order
+SELECT oi.item_name
+FROM OrderItems oi
+WHERE oi.order_ID = 1;

@@ -1,0 +1,216 @@
+-- -------------------------------
+-- SCENARIO 1: Library Management System
+-- -------------------------------
+
+CREATE TABLE MembershipTiers (
+    TierID INT PRIMARY KEY,
+    TierName VARCHAR(50),
+    MaxLoans INT,
+    MaxDigitalAccess INT
+);
+
+CREATE TABLE Members (
+    MemberID INT PRIMARY KEY,
+    Name VARCHAR(100),
+    Address VARCHAR(200),
+    Phone VARCHAR(15),
+    Email VARCHAR(100),
+    TierID INT,
+    DateOfBirth DATE,
+    FOREIGN KEY (TierID) REFERENCES MembershipTiers(TierID)
+);
+
+CREATE TABLE Resources (
+    ResourceID INT PRIMARY KEY,
+    Title VARCHAR(100),
+    Author VARCHAR(100),
+    Type VARCHAR(50),
+    Format VARCHAR(50),
+    AvailabilityStatus VARCHAR(20)
+);
+
+CREATE TABLE Loans (
+    LoanID INT PRIMARY KEY,
+    MemberID INT,
+    ResourceID INT,
+    LoanDate DATE,
+    ReturnDate DATE,
+    FOREIGN KEY (MemberID) REFERENCES Members(MemberID),
+    FOREIGN KEY (ResourceID) REFERENCES Resources(ResourceID)
+);
+
+CREATE TABLE DigitalAccess (
+    AccessID INT PRIMARY KEY,
+    MemberID INT,
+    ResourceID INT,
+    AccessDate DATE,
+    ExpiryDate DATE,
+    FOREIGN KEY (MemberID) REFERENCES Members(MemberID),
+    FOREIGN KEY (ResourceID) REFERENCES Resources(ResourceID)
+);
+
+-- Insert sample data
+INSERT INTO MembershipTiers VALUES
+(1, 'Basic', 3, 2),
+(2, 'Premium', 7, 5),
+(3, 'Elite', 10, 10);
+
+INSERT INTO Members (MemberID, Name, Address, Phone, Email, TierID) VALUES
+(101, 'Alice', '123 Maple St', '1234567890', 'alice@mail.com', 2),
+(102, 'Bob', '456 Oak St', '2345678901', 'bob@mail.com', 1),
+(103, 'Charlie', '789 Pine St', '3456789012', 'charlie@mail.com', 2);
+
+INSERT INTO Resources VALUES
+(201, 'Data Structures', 'Mark Allen', 'Book', 'Hardcover', 'Available'),
+(202, 'Machine Learning', 'Andrew Ng', 'Book', 'Paperback', 'Available'),
+(203, 'Database Systems', 'Elmasri', 'Book', 'PDF', 'Available'),
+(204, 'Operating Systems', 'Galvin', 'Book', 'eBook', 'Available');
+
+INSERT INTO Loans VALUES
+(1, 101, 201, '2025-04-01', '2025-04-10'),
+(2, 101, 202, '2025-04-02', '2025-04-11'),
+(3, 101, 203, '2025-04-03', '2025-04-12'),
+(4, 101, 204, '2025-04-04', '2025-04-13'),
+(5, 101, 202, '2025-04-05', '2025-04-14'),
+(6, 101, 203, '2025-04-06', '2025-04-15');
+
+INSERT INTO DigitalAccess VALUES
+(1, 102, 203, '2025-04-01', '2025-05-01'),
+(2, 103, 204, '2025-04-01', '2025-05-01');
+
+-- Queries
+SELECT * FROM Members WHERE TierID = 2;
+
+SELECT MemberID, COUNT(*) AS TotalLoans FROM Loans GROUP BY MemberID HAVING COUNT(*) > 5;
+
+SELECT SUM(MaxLoans) AS TotalMaxLoans FROM MembershipTiers;
+
+SELECT Members.Name, Loans.LoanDate
+FROM Members
+JOIN Loans ON Members.MemberID = Loans.MemberID;
+
+DELIMITER //
+CREATE TRIGGER before_loan_insert
+BEFORE INSERT ON Loans
+FOR EACH ROW
+BEGIN
+    UPDATE Resources
+    SET AvailabilityStatus = 'Not Available'
+    WHERE ResourceID = NEW.ResourceID;
+END;
+//
+DELIMITER ;
+
+ALTER TABLE Members ADD COLUMN DateOfBirth DATE;
+
+-- -------------------------------
+-- SCENARIO 2: More Member/Resource Operations
+-- -------------------------------
+
+SELECT * FROM Resources WHERE Type IN ('Book', 'Magazine');
+
+SELECT * FROM Members ORDER BY Name ASC;
+
+SELECT TierID, COUNT(*) AS TotalMembers FROM Members GROUP BY TierID;
+
+DELIMITER //
+CREATE PROCEDURE GetMemberLoans(IN memID INT)
+BEGIN
+    SELECT * FROM Loans WHERE MemberID = memID;
+END;
+//
+DELIMITER ;
+
+CALL GetMemberLoans(1);
+
+UPDATE Members SET Phone = '9876543210' WHERE MemberID = 1;
+
+SELECT Loans.*, Members.Name, Members.Email
+FROM Loans
+LEFT JOIN Members ON Loans.MemberID = Members.MemberID;
+
+-- -------------------------------
+-- SCENARIO 3: Digital Access and Loan Handling
+-- -------------------------------
+
+SELECT * FROM DigitalAccess WHERE ExpiryDate >= CURDATE();
+
+SELECT MemberID, COUNT(*) AS AccessCount
+FROM DigitalAccess
+GROUP BY MemberID
+HAVING COUNT(*) > 2;
+
+SELECT AVG(MaxDigitalAccess) AS AvgDigitalLimit FROM MembershipTiers;
+
+SELECT Resources.Title, Loans.MemberID, Loans.LoanDate
+FROM Resources
+LEFT JOIN Loans ON Resources.ResourceID = Loans.ResourceID;
+
+DELIMITER //
+CREATE TRIGGER after_loan_delete
+AFTER DELETE ON Loans
+FOR EACH ROW
+BEGIN
+    UPDATE Resources
+    SET AvailabilityStatus = 'Available'
+    WHERE ResourceID = OLD.ResourceID;
+END;
+//
+DELIMITER ;
+
+DELIMITER //
+CREATE PROCEDURE GetResourcesByAvailability(IN status VARCHAR(20))
+BEGIN
+    SELECT ResourceID, Title, Author, Type, Format
+    FROM Resources
+    WHERE AvailabilityStatus = status;
+END;
+//
+DELIMITER ;
+
+CALL GetResourcesByAvailability('Available');
+
+-- -------------------------------
+-- SCENARIO 4: Advanced Functions and Reports
+-- -------------------------------
+
+SELECT Type, Format, COUNT(*) AS TotalResources
+FROM Resources
+GROUP BY Type, Format;
+
+SELECT m.Name, t.TierName
+FROM Members m
+LEFT JOIN MembershipTiers t ON m.TierID = t.TierID;
+
+SELECT * FROM Resources WHERE AvailabilityStatus = 'Unavailable';
+
+DELIMITER //
+CREATE FUNCTION CountAvailableResourcesByFormat(resFormat VARCHAR(20))
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE total INT;
+    SELECT COUNT(*) INTO total
+    FROM Resources
+    WHERE Format = resFormat
+      AND AvailabilityStatus = 'Available';
+    RETURN total;
+END;
+//
+DELIMITER ;
+
+SELECT CountAvailableResourcesByFormat('Digital') AS DigitalAvailableResources;
+
+DELIMITER //
+CREATE PROCEDURE ListResourcesByAvailability(IN status VARCHAR(20))
+BEGIN
+    SELECT * FROM Resources WHERE AvailabilityStatus = status;
+END;
+//
+DELIMITER ;
+
+CALL ListResourcesByAvailability('Available');
+
+SELECT ResourceID, COUNT(*) AS TotalAccesses
+FROM DigitalAccess
+GROUP BY ResourceID;

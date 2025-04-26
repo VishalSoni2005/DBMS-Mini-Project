@@ -1,0 +1,273 @@
+Scenario No.1: 
+
+CREATE TABLE Departments (
+  DepartmentID INT PRIMARY KEY AUTO_INCREMENT,
+  DepartmentName VARCHAR(100),
+  Location VARCHAR(100)
+);
+CREATE TABLE Doctors (
+  DoctorID INT PRIMARY KEY AUTO_INCREMENT,
+  DoctorName VARCHAR(100),
+  Specialty VARCHAR(100),
+  DepartmentID INT,
+  FOREIGN KEY (DepartmentID) REFERENCES Departments(DepartmentID)
+);
+CREATE TABLE Patients (
+  PatientID INT PRIMARY KEY AUTO_INCREMENT,
+  PatientName VARCHAR(100),
+  DOB DATE,
+  Address VARCHAR(200),
+  PhoneNumber VARCHAR(15)
+);
+CREATE TABLE Appointments (
+  AppointmentID INT PRIMARY KEY AUTO_INCREMENT,
+  PatientID INT,
+  DoctorID INT,
+  AppointmentDate DATE,
+  CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (PatientID) REFERENCES Patients(PatientID),
+  FOREIGN KEY (DoctorID) REFERENCES Doctors(DoctorID)
+);
+-- Insert sample data
+-- Insert Departments
+INSERT INTO Departments (DepartmentName, Location)
+VALUES ('Cardiology', 'Block A'),
+  ('Neurology', 'Block B'),
+  ('Orthopedics', 'Block C'),
+  ('General Medicine', 'Block D');
+-- Insert Doctors
+INSERT INTO Doctors (DoctorName, Specialty, DepartmentID)
+VALUES ('Dr. Smith', 'Cardiology', 1),
+  ('Dr. Rose', 'Neurology', 2),
+  ('Dr. Allen', 'Orthopedics', 3),
+  ('Dr. Jake', 'General Medicine', 4),
+  ('Dr. Sam', 'Cardiology', 1);
+-- Insert Patients
+INSERT INTO Patients (PatientName, DOB, Address, PhoneNumber)
+VALUES (
+    'Alice',
+    '2000-05-14',
+    '123 Street, NY',
+    '1111111111'
+  ),
+  (
+    'Bob',
+    '1990-09-10',
+    '456 Lane, LA',
+    '2222222222'
+  ),
+  (
+    'Charlie',
+    '1985-12-25',
+    '789 Avenue, TX',
+    '3333333333'
+  );
+-- Insert Appointments
+INSERT INTO Appointments (PatientID, DoctorID, AppointmentDate)
+VALUES (1, 1, CURDATE()),
+  (2, 2, CURDATE()),
+  (3, 3, '2024-12-01');
+-- Queries
+-- 1. Find doctors specializing in Cardiology, Neurology, or Orthopedics
+SELECT *
+FROM Doctors
+WHERE Specialty IN ('Cardiology', 'Neurology', 'Orthopedics');
+-- 2. List patients ordered by youngest to oldest
+SELECT *
+FROM Patients
+ORDER BY DOB DESC;
+-- 3. Count today's appointments
+SELECT COUNT(*) AS TodayAppointments
+FROM Appointments
+WHERE DATE(AppointmentDate) = CURDATE();
+-- 4. Doctor names with department names
+SELECT D.DoctorName,
+  Dept.DepartmentName
+FROM Doctors D
+  JOIN Departments Dept ON D.DepartmentID = Dept.DepartmentID;
+--5
+DELIMITER // CREATE PROCEDURE AddNewPatient(
+  IN p_name VARCHAR(100),
+  IN p_dob DATE,
+  IN p_address VARCHAR(255),
+  IN p_phone VARCHAR(15)
+) BEGIN
+INSERT INTO Patients (PatientName, DOB, Address, PhoneNumber)
+VALUES (p_name, p_dob, p_address, p_phone);
+END;
+// DELIMITER;
+CALL AddNewPatient(
+  'Daisy',
+  '1995-08-20',
+  '12 Rose St, SF',
+  '4444444444'
+);
+-- 6. Trigger to set appointment date to today if not provided
+DELIMITER // CREATE TRIGGER trg_default_doctor_department BEFORE
+INSERT ON Doctors FOR EACH ROW BEGIN IF NEW.DepartmentID IS NULL THEN
+SET NEW.DepartmentID = 1;
+END IF;
+END;
+// DELIMITER;
+INSERT INTO Doctors (DoctorName, Specialty)
+VALUES ('Dr. John', 'Dermatology');
+
+
+Scenario 2: 
+
+queries -- 1. List doctors ordered by specialties
+SELECT DoctorName,
+  Specialty,
+  DepartmentID
+FROM Doctors
+ORDER BY Specialty ASC;
+-- 2. How many doctors per department
+SELECT DepartmentID,
+  COUNT(*) AS DoctorCount
+FROM Doctors
+GROUP BY DepartmentID;
+-- 3. Total appointments per doctor
+SELECT DoctorID,
+  COUNT(*) AS AppointmentCount
+FROM Appointments
+GROUP BY DoctorID;
+-- 4. Patient names with appointment dates
+SELECT p.PatientName,
+  a.AppointmentDate
+FROM Patients p
+  JOIN Appointments a ON p.PatientID = a.PatientID;
+--5
+DELIMITER // CREATE PROCEDURE GetDoctorInfo(IN doctor_id INT) BEGIN
+SELECT DoctorName,
+  Specialty
+FROM Doctors
+WHERE DoctorID = doctor_id;
+END // DELIMITER;
+CALL GetDoctorInfo(101);
+--6
+DELIMITER // CREATE TRIGGER SetAppointmentDate BEFORE
+INSERT ON Appointments FOR EACH ROW BEGIN IF NEW.AppointmentDate IS NULL THEN
+SET NEW.AppointmentDate = CURRENT_DATE;
+END IF;
+END // DELIMITER;
+INSERT INTO Appointments (AppointmentID, PatientID, DoctorID)
+VALUES (304, 202, 103);
+
+
+
+
+Scenario 3: 
+
+-- 1. Patients over 65 years old
+SELECT PatientID,
+  PatientName,
+  Age,
+  PhoneNumber
+FROM Patients
+WHERE Age > 65;
+-- 2. Average age of patients
+SELECT AVG(Age) AS AveragePatientAge
+FROM Patients;
+-- 3. Doctors with department names
+SELECT d.DoctorName,
+  dept.DepartmentName
+FROM Doctors d
+  JOIN Departments dept ON d.DepartmentID = dept.DepartmentID;
+--4
+DELIMITER // CREATE PROCEDURE GetDoctorAppointments(IN doctor_id_param INT) BEGIN
+SELECT AppointmentID,
+  PatientID,
+  AppointmentDate
+FROM Appointments
+WHERE DoctorID = doctor_id_param;
+END // DELIMITER;
+CALL GetDoctorAppointments(1);
+--5
+SELECT PatientName,
+  Age
+FROM Patients
+ORDER BY Age ASC
+LIMIT 1;
+--6
+DELIMITER // CREATE PROCEDURE ShowSeniorPatients() BEGIN
+DECLARE done INT DEFAULT 0;
+DECLARE pName VARCHAR(100);
+DECLARE pAge INT;
+DECLARE pPhone VARCHAR(15);
+DECLARE patient_cursor CURSOR FOR
+SELECT PatientName,
+  Age,
+  PhoneNumber
+FROM Patients;
+DECLARE CONTINUE HANDLER FOR NOT FOUND
+SET done = 1;
+OPEN patient_cursor;
+read_loop: LOOP FETCH patient_cursor INTO pName,
+pAge,
+pPhone;
+IF done THEN LEAVE read_loop;
+END IF;
+IF pAge > 60 THEN
+SELECT CONCAT('Name: ', pName, ' | Phone: ', pPhone) AS SeniorCitizen;
+END IF;
+END LOOP;
+CLOSE patient_cursor;
+END // DELIMITER;
+CALL ShowSeniorPatients();
+
+
+
+senario 4: 
+
+-- 1. Doctors working in Cardiology
+SELECT d.DoctorName,
+  d.Specialty
+FROM Doctors d
+  JOIN Departments dept ON d.DepartmentID = dept.DepartmentID
+WHERE dept.DepartmentName = 'Cardiology';
+-- 2. Patients between 30 and 50 years
+SELECT PatientName,
+  Age
+FROM Patients
+WHERE Age BETWEEN 30 AND 50;
+-- 3. Top 3 oldest patients
+SELECT PatientName,
+  Age
+FROM Patients
+ORDER BY Age DESC
+LIMIT 3;
+--4
+DELIMITER // CREATE PROCEDURE GetPatientAgeGroups() BEGIN
+SELECT CASE
+    WHEN Age < 18 THEN 'Under 18'
+    WHEN Age BETWEEN 18 AND 30 THEN '18-30'
+    WHEN Age BETWEEN 31 AND 50 THEN '31-50'
+    WHEN Age BETWEEN 51 AND 70 THEN '51-70'
+    ELSE 'Over 70'
+  END AS AgeGroup,
+  COUNT(*) AS PatientCount
+FROM Patients
+GROUP BY AgeGroup
+ORDER BY MIN(Age);
+END // DELIMITER;
+CALL GetPatientAgeGroups();
+--5
+CREATE VIEW PatientDirectory AS
+SELECT PatientID,
+  PatientName,
+  Age,
+  PhoneNumber
+FROM Patients;
+SELECT *
+FROM PatientDirectory;
+--6
+DELIMITER // CREATE FUNCTION CountAppointments(p_id INT) RETURNS INT DETERMINISTIC BEGIN
+DECLARE appt_count INT;
+SELECT COUNT(*) INTO appt_count
+FROM Appointments
+WHERE PatientID = p_id;
+RETURN appt_count;
+END // DELIMITER;
+SELECT PatientName,
+  CountAppointments(PatientID) AS AppointmentCount
+FROM Patients;

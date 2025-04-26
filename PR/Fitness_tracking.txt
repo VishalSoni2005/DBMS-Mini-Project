@@ -1,0 +1,371 @@
+-- SC2: Fitness Tracking Application Database
+
+-- ---------------------------------
+-- SC2: Fitness Tracking Application Database
+-- ---------------------------------
+
+-- Create Goals table
+CREATE TABLE Goals (
+    goal_ID INT PRIMARY KEY AUTO_INCREMENT,
+    goal_type VARCHAR(100) NOT NULL
+);
+
+-- Insert data into Goals
+INSERT INTO Goals (goal_type) VALUES
+('Lose Weight'),
+('Strength Training'),
+('Improve Endurance'),
+('Increase Flexibility'),
+('Maintain Current Fitness'),
+('Gain Muscle');
+
+-- Create Users table
+CREATE TABLE Users (
+    user_ID INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    registration_date DATE NOT NULL
+);
+
+-- Insert data into Users
+INSERT INTO Users (name, email, registration_date) VALUES
+('PQR', 'PQR@gmail.com', '2024-11-20'),
+('ABC', 'ABC@gmail.com', '2025-01-15'),
+('XYZ', 'XYZ@gmail.com', '2025-02-03'),
+('ABCD', 'ABCD@gmail.com', '2025-03-01'),
+('PQRS', 'PQRS@gmail.com', '2025-04-05');
+
+-- Create Users_Goal table
+CREATE TABLE Users_Goal (
+    user_ID INT,
+    goal_ID INT,
+    goal_type VARCHAR(200),
+    FOREIGN KEY (user_ID) REFERENCES Users(user_ID),
+    FOREIGN KEY (goal_ID) REFERENCES Goals(goal_ID)
+);
+
+-- Insert data into Users_Goal
+INSERT INTO Users_Goal (user_ID, goal_ID, goal_type)
+SELECT 1, 3, goal_type FROM Goals WHERE goal_ID = 3;
+INSERT INTO Users_Goal (user_ID, goal_ID, goal_type)
+SELECT 1, 4, goal_type FROM Goals WHERE goal_ID = 4;
+INSERT INTO Users_Goal (user_ID, goal_ID, goal_type)
+SELECT 2, 2, goal_type FROM Goals WHERE goal_ID = 2;
+INSERT INTO Users_Goal (user_ID, goal_ID, goal_type)
+SELECT 2, 6, goal_type FROM Goals WHERE goal_ID = 6;
+INSERT INTO Users_Goal (user_ID, goal_ID, goal_type)
+SELECT 3, 1, goal_type FROM Goals WHERE goal_ID = 1;
+
+-- Create Workouts table
+CREATE TABLE Workouts (
+    workout_ID INT PRIMARY KEY AUTO_INCREMENT,
+    user_ID INT NOT NULL,
+    workout_type VARCHAR(100) NOT NULL,
+    start_time DATETIME NOT NULL,
+    end_time DATETIME NOT NULL,
+    duration_in_minutes INT NOT NULL,
+    FOREIGN KEY (user_ID) REFERENCES Users(user_ID)
+);
+
+-- Insert data into Workouts
+INSERT INTO Workouts (user_ID, workout_type, start_time, end_time, duration_in_minutes) VALUES
+(1, 'Running', '2025-04-11 07:00:00', '2025-04-11 07:45:00', 45),
+(2, 'Weightlifting', '2025-04-11 18:30:00', '2025-04-11 19:30:00', 60),
+(1, 'Yoga', '2025-04-12 10:00:00', '2025-04-12 11:00:00', 60),
+(3, 'Cycling', '2025-04-12 16:00:00', '2025-04-12 17:30:00', 90),
+(2, 'Cardio', '2025-04-13 12:00:00', '2025-04-13 12:30:00', 30),
+(4, 'Walking', '2025-04-13 08:00:00', '2025-04-13 08:45:00', 45),
+(5, 'Weightlifting', '2025-04-14 19:00:00', '2025-04-14 20:15:00', 75),
+(1, 'Swimming', '2025-04-14 09:00:00', '2025-04-14 09:45:00', 45),
+(3, 'Running', '2025-04-15 17:00:00', '2025-04-15 17:35:00', 35),
+(4, 'Hiking', '2025-04-15 10:00:00', '2025-04-15 11:30:00', 90);
+
+-- Create Steps table
+CREATE TABLE Steps (
+    Sr_No INT PRIMARY KEY AUTO_INCREMENT,
+    user_ID INT NOT NULL,
+    tracking_date DATE NOT NULL,
+    step_count INT UNSIGNED NOT NULL,
+    UNIQUE KEY (user_ID, tracking_date),
+    FOREIGN KEY (user_ID) REFERENCES Users(user_ID)
+);
+
+-- Insert data into Steps
+INSERT INTO Steps (user_ID, tracking_date, step_count) VALUES
+(1, '2025-01-11', 10250),
+(2, '2025-01-11', 6780),
+(3, '2025-01-11', 9125),
+(4, '2025-01-11', 5300),
+(5, '2025-01-11', 8500),
+(1, '2025-01-12', 11500),
+(2, '2025-01-12', 7200),
+(3, '2025-01-12', 9800),
+(4, '2025-01-12', 5800),
+(5, '2025-02-12', 8900),
+(1, '2025-02-13', 9800),
+(2, '2025-02-13', 6500),
+(3, '2025-02-13', 8950),
+(4, '2025-02-13', 5100),
+(5, '2025-03-13', 8200);
+
+
+-- ---------------------------------
+-- SC2 Part A Queries
+-- ---------------------------------
+
+-- 1. Total duration of workouts per user
+SELECT 
+    u.name AS user_name,
+    SUM(w.duration_in_minutes) AS total_workout_duration_minutes
+FROM Users u
+JOIN Workouts w ON u.user_ID = w.user_ID
+GROUP BY u.user_ID, u.name;
+
+-- 2. Stored procedure to retrieve workouts within date range
+DELIMITER //
+CREATE PROCEDURE GetUserWorkoutsByDateRange(
+    IN p_user_id INT,
+    IN p_start_date DATE,
+    IN p_end_date DATE
+)
+BEGIN
+    SELECT workout_ID, workout_type, start_time, end_time, duration_in_minutes
+    FROM Workouts
+    WHERE user_ID = p_user_id
+      AND DATE(start_time) >= p_start_date
+      AND DATE(end_time) <= p_end_date;
+END //
+DELIMITER ;
+
+CALL GetUserWorkoutsByDateRange(1, '2025-04-01', '2025-04-11');
+
+-- 3. Total number of workouts per user
+SELECT 
+    u.name AS User_Name,
+    COUNT(w.workout_ID) AS Total_Workouts
+FROM Users u
+LEFT JOIN Workouts w ON u.user_ID = w.user_ID
+GROUP BY u.user_ID, u.name
+ORDER BY Total_Workouts DESC;
+
+-- 4. View showing workout summary per user
+CREATE VIEW UserWorkoutSummary AS
+SELECT 
+    u.name AS User_Name,
+    w.workout_type AS Workout_Type,
+    SUM(w.duration_in_minutes) AS Total_Duration_Minutes
+FROM Users u
+JOIN Workouts w ON u.user_ID = w.user_ID
+GROUP BY u.user_ID, u.name, w.workout_type;
+
+SELECT * FROM UserWorkoutSummary;
+
+-- 5. Users who set a goal to lose weight
+SELECT 
+    u.user_ID, u.name, u.email, u.registration_date
+FROM Users u
+JOIN Users_Goal ug ON u.user_ID = ug.user_ID
+WHERE ug.goal_type = 'Lose Weight';
+
+-- 6. Total workouts performed by each user
+SELECT 
+    u.name AS User_Name,
+    COUNT(w.workout_ID) AS Total_Workouts
+FROM Users u
+LEFT JOIN Workouts w ON u.user_ID = w.user_ID
+GROUP BY u.user_ID, u.name
+ORDER BY Total_Workouts DESC;
+
+-- ---------------------------------
+-- SC2 Part B Queries
+-- ---------------------------------
+
+-- 1. Users with 'Improve Endurance' goal doing 'Running' or 'Cycling'
+SELECT DISTINCT
+    u.user_ID, u.name, u.email
+FROM Users u
+JOIN Users_Goal ug ON u.user_ID = ug.user_ID
+JOIN Workouts w ON u.user_ID = w.user_ID
+WHERE ug.goal_type = 'Improve Endurance'
+  AND w.workout_type IN ('Running', 'Cycling');
+
+-- 2. Average daily step count per user
+SELECT 
+    u.user_ID,
+    u.name AS User_Name,
+    AVG(s.step_count) AS Average_Daily_Steps
+FROM Users u
+LEFT JOIN Steps s ON u.user_ID = s.user_ID
+GROUP BY u.user_ID, u.name
+ORDER BY Average_Daily_Steps DESC;
+
+-- 3. Users who worked out on the same day with >8000 steps
+SELECT DISTINCT
+    u.user_ID, u.name, u.email
+FROM Users u
+JOIN Workouts w ON u.user_ID = w.user_ID
+JOIN Steps s ON u.user_ID = s.user_ID
+WHERE DATE(w.start_time) = s.tracking_date
+  AND s.step_count > 8000;
+
+-- 4. View: User and most recent workout date
+CREATE VIEW UserLastWorkout AS
+SELECT 
+    u.name AS User_Name,
+    MAX(w.start_time) AS Last_Workout_Date
+FROM Users u
+LEFT JOIN Workouts w ON u.user_ID = w.user_ID
+GROUP BY u.user_ID, u.name;
+
+-- 5. Trigger to ensure end_time > start_time
+DELIMITER //
+CREATE TRIGGER EnsureValidWorkoutTimes
+BEFORE INSERT ON Workouts
+FOR EACH ROW
+BEGIN
+    IF NEW.end_time <= NEW.start_time THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Workout end time must be after the start time.';
+    END IF;
+END //
+DELIMITER ;
+
+-- 6. Users with 'Lose Weight' goal and >1 workout
+SELECT 
+    u.user_ID, u.name, u.email
+FROM Users u
+JOIN Users_Goal ug ON u.user_ID = ug.user_ID
+JOIN Workouts w ON u.user_ID = w.user_ID
+WHERE ug.goal_type = 'Lose Weight'
+GROUP BY u.user_ID, u.name, u.email
+HAVING COUNT(w.workout_ID) > 1;
+
+-- ---------------------------------
+-- SC2 Part C Queries
+-- ---------------------------------
+
+-- 1. User with most total steps
+SELECT 
+    u.name AS user_name,
+    SUM(s.step_count) AS total_steps
+FROM Steps s
+JOIN Users u ON s.user_ID = u.user_ID
+GROUP BY u.name
+ORDER BY total_steps DESC
+LIMIT 1;
+
+-- 2. Users with 'Increase Flexibility' goal
+SELECT DISTINCT
+    u.user_ID, u.name, u.email
+FROM Users u
+JOIN Users_Goal ug ON u.user_ID = ug.user_ID
+WHERE ug.goal_type = 'Increase Flexibility';
+
+-- 3. Average duration per workout type
+SELECT 
+    workout_type,
+    AVG(duration_in_minutes) AS average_duration
+FROM Workouts
+GROUP BY workout_type;
+
+-- 4. Function to calculate total steps in date range
+DELIMITER //
+CREATE FUNCTION GetTotalStepsInDateRange(userId INT, startDate DATE, endDate DATE)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE totalSteps INT;
+    SELECT SUM(step_count)
+    INTO totalSteps
+    FROM Steps
+    WHERE user_ID = userId
+      AND tracking_date BETWEEN startDate AND endDate;
+    IF totalSteps IS NULL THEN
+        SET totalSteps = 0;
+    END IF;
+    RETURN totalSteps;
+END //
+DELIMITER ;
+
+-- 5. Workouts with duration > 60 minutes
+SELECT 
+    workout_ID, user_ID, workout_type, start_time, end_time, duration_in_minutes
+FROM Workouts
+WHERE duration_in_minutes > 60;
+
+-- 6. Workouts by user on a given date
+SELECT 
+    w.workout_type, w.start_time, w.end_time
+FROM Workouts w
+WHERE w.user_ID = 1 AND DATE(w.start_time) = '2025-04-11';
+
+-- ---------------------------------
+-- SC2 Part D Queries
+-- ---------------------------------
+
+-- 1. Users active on a specific date
+SELECT DISTINCT
+    u.user_ID, u.name
+FROM Users u
+WHERE u.user_ID IN (
+    SELECT user_ID FROM Workouts WHERE DATE(start_time) = '2025-04-11'
+) OR u.user_ID IN (
+    SELECT user_ID FROM Steps WHERE tracking_date = '2025-04-11'
+);
+
+-- 2. Most common goal type
+SELECT 
+    g.goal_type,
+    COUNT(ug.user_ID) AS user_count
+FROM Goals g
+JOIN Users_Goal ug ON g.goal_ID = ug.goal_ID
+GROUP BY g.goal_type
+ORDER BY user_count DESC
+LIMIT 1;
+
+-- 3. Users registered in the last month
+SELECT 
+    user_ID, name
+FROM Users
+WHERE registration_date BETWEEN '2025-03-13' AND '2025-04-13';
+
+-- 4. View: Workout summary per user
+CREATE VIEW FullUserWorkoutSummary AS
+SELECT 
+    u.user_ID, u.name AS user_name,
+    w.workout_ID, w.workout_type,
+    w.start_time, w.end_time, w.duration_in_minutes
+FROM Users u
+JOIN Workouts w ON u.user_ID = w.user_ID;
+
+-- 5. Procedure with Cursor: First 3 users
+DELIMITER //
+CREATE PROCEDURE ListFirstThreeUsers()
+BEGIN
+    DECLARE done INT DEFAULT FALSE;
+    DECLARE user_id_var INT;
+    DECLARE user_name_var VARCHAR(255);
+
+    DECLARE user_cursor CURSOR FOR
+    SELECT user_ID, name
+    FROM Users
+    ORDER BY user_ID
+    LIMIT 3;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+    OPEN user_cursor;
+
+    read_loop: LOOP
+        FETCH user_cursor INTO user_id_var, user_name_var;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+        SELECT CONCAT('User ID: ', user_id_var, ', Name: ', user_name_var);
+    END LOOP;
+
+    CLOSE user_cursor;
+END //
+DELIMITER ;
+
+CALL ListFirstThreeUsers();

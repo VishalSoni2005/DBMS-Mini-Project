@@ -1,0 +1,300 @@
+-- ---------------------------------
+-- SC1 Part A: College Management System
+-- ---------------------------------
+
+CREATE TABLE Classes (
+    class_ID VARCHAR(10) PRIMARY KEY,
+    class_name VARCHAR(50) NOT NULL,
+    teacher_ID VARCHAR(15) -- Optional
+);
+
+CREATE TABLE Students (
+    student_ID VARCHAR(15) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    date_of_birth DATE,
+    gender VARCHAR(10),
+    class_ID VARCHAR(10),
+    FOREIGN KEY (class_ID) REFERENCES Classes(class_ID)
+);
+
+CREATE TABLE Subjects (
+    subject_ID VARCHAR(10) PRIMARY KEY,
+    subject_name VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE Teachers (
+    teacher_ID VARCHAR(15) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE TeacherSubjects (
+    teacher_ID VARCHAR(15),
+    subject_ID VARCHAR(10),
+    PRIMARY KEY (teacher_ID, subject_ID),
+    FOREIGN KEY (teacher_ID) REFERENCES Teachers(teacher_ID),
+    FOREIGN KEY (subject_ID) REFERENCES Subjects(subject_ID)
+);
+
+CREATE TABLE Marks (
+    student_ID VARCHAR(15),
+    class_ID VARCHAR(10),
+    subject_ID VARCHAR(10),
+    exam_name VARCHAR(50) NOT NULL,
+    marks DECIMAL(5,2),
+    PRIMARY KEY (student_ID, class_ID, subject_ID, exam_name),
+    FOREIGN KEY (student_ID) REFERENCES Students(student_ID),
+    FOREIGN KEY (class_ID) REFERENCES Classes(class_ID),
+    FOREIGN KEY (subject_ID) REFERENCES Subjects(subject_ID)
+);
+
+CREATE TABLE Attendance (
+    student_ID VARCHAR(15),
+    month VARCHAR(20) NOT NULL,
+    No_Of_Days_Present INT,
+    PRIMARY KEY (student_ID, month),
+    FOREIGN KEY (student_ID) REFERENCES Students(student_ID)
+);
+
+-- Insert data
+
+INSERT INTO Classes (class_ID, class_name) VALUES
+('FY', 'First Year'),
+('SY', 'Second Year'),
+('TY', 'Third Year'),
+('SE', 'Senior');
+
+INSERT INTO Subjects (subject_ID, subject_name) VALUES
+('SUB01', 'Mathematics'),
+('SUB02', 'DBMS'),
+('SUB03', 'CG'),
+('SUB04', 'SE');
+
+INSERT INTO Teachers (teacher_ID, name) VALUES
+('T001', 'ABC'),
+('T002', 'PQR'),
+('T003', 'XYZ');
+
+INSERT INTO TeacherSubjects (teacher_ID, subject_ID) VALUES
+('T001', 'SUB01'),
+('T001', 'SUB02'),
+('T002', 'SUB03'),
+('T003', 'SUB04');
+
+INSERT INTO Students (student_ID, name, date_of_birth, gender, class_ID) VALUES
+('S101', 'AAA', '2004-03-15', 'Female', 'SE'),
+('S102', 'BBB', '2003-11-20', 'Male', 'TY'),
+('S103', 'CCC', '2005-07-01', 'Male', 'FY'),
+('S104', 'DDD', '2004-03-25', 'Female', 'SE'),
+('S105', 'EEE', '2003-09-10', 'Female', 'SY');
+
+INSERT INTO Marks (student_ID, class_ID, subject_ID, exam_name, marks) VALUES
+('S101', 'SE', 'SUB01', 'Midterm', 23),
+('S101', 'SE', 'SUB02', 'Midterm', 21),
+('S101', 'SE', 'SUB03', 'Midterm', 20),
+('S101', 'SE', 'SUB04', 'Midterm', 24),
+('S102', 'TY', 'SUB01', 'Midterm', 18),
+('S102', 'TY', 'SUB02', 'Midterm', 24),
+('S102', 'TY', 'SUB03', 'Midterm', 22),
+('S102', 'TY', 'SUB04', 'Midterm', 19),
+('S103', 'FY', 'SUB01', 'Midterm', 16),
+('S103', 'FY', 'SUB02', 'Midterm', 25),
+('S103', 'FY', 'SUB03', 'Midterm', 18),
+('S103', 'FY', 'SUB04', 'Midterm', 21),
+('S104', 'SE', 'SUB01', 'Midterm', 15),
+('S104', 'SE', 'SUB02', 'Midterm', 24),
+('S104', 'SE', 'SUB03', 'Midterm', 10),
+('S104', 'SE', 'SUB04', 'Midterm', 9),
+('S105', 'SY', 'SUB01', 'Midterm', 6),
+('S105', 'SY', 'SUB02', 'Midterm', 11),
+('S105', 'SY', 'SUB03', 'Midterm', 12),
+('S105', 'SY', 'SUB04', 'Midterm', 23);
+
+INSERT INTO Attendance (student_ID, month, No_Of_Days_Present) VALUES
+('S101', 'March', 20),
+('S101', 'April', 22),
+('S102', 'March', 18),
+('S102', 'April', 15),
+('S103', 'March', 21),
+('S103', 'April', 19),
+('S104', 'March', 22),
+('S104', 'April', 21),
+('S105', 'March', 16),
+('S105', 'April', 23);
+
+-- ---------------------------------
+-- SC1 Part A Queries
+-- ---------------------------------
+
+DELIMITER //
+CREATE PROCEDURE GetAverageClassMarks(IN classId VARCHAR(10))
+BEGIN
+    SELECT c.class_name, AVG(m.marks) AS average_marks
+    FROM Marks m
+    JOIN Students s ON m.student_ID = s.student_ID
+    JOIN Classes c ON s.class_ID = c.class_ID
+    WHERE s.class_ID = classId
+    GROUP BY c.class_name;
+END //
+DELIMITER ;
+
+CALL GetAverageClassMarks('SE');
+
+CREATE VIEW StudentGrades AS
+SELECT 
+    s.student_ID,
+    s.name AS student_name,
+    c.class_name,
+    sub.subject_name,
+    m.exam_name,
+    m.marks,
+    CASE
+        WHEN m.marks >= 90 THEN 'A'
+        WHEN m.marks > 70 THEN 'B'
+        WHEN m.marks >= 40 THEN 'C'
+        ELSE 'D'
+    END AS grade
+FROM Students s
+JOIN Classes c ON s.class_ID = c.class_ID
+JOIN Marks m ON s.student_ID = m.student_ID AND c.class_ID = m.class_ID
+JOIN Subjects sub ON m.subject_ID = sub.subject_ID;
+
+SELECT 
+    s.student_ID,
+    s.name AS student_name,
+    c.class_name,
+    m.marks
+FROM Students s
+JOIN Classes c ON s.class_ID = c.class_ID
+JOIN Marks m ON s.student_ID = m.student_ID
+WHERE m.subject_ID = 'SUB01'
+AND m.marks = (SELECT MAX(marks) FROM Marks WHERE subject_ID = 'SUB01');
+
+SELECT name, date_of_birth
+FROM Students
+WHERE MONTH(date_of_birth) = 3;
+
+SELECT 
+    sub.subject_name,
+    AVG(m.marks) AS average_marks
+FROM Marks m
+JOIN Subjects sub ON m.subject_ID = sub.subject_ID
+WHERE m.exam_name = 'Midterm'
+GROUP BY sub.subject_name;
+
+SELECT 
+    c.class_name,
+    COUNT(s.student_ID) AS total_students
+FROM Classes c
+LEFT JOIN Students s ON c.class_ID = s.class_ID
+GROUP BY c.class_name;
+
+-- ---------------------------------
+-- SC1 Part B
+-- ---------------------------------
+
+DELIMITER //
+CREATE FUNCTION CalculateAbsentDays(studentID VARCHAR(20), month1 VARCHAR(20))
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE absent INT;
+    SET absent = 30 - (SELECT No_Of_Days_Present FROM Attendance WHERE student_ID = studentID AND month = month1);
+    RETURN absent;
+END //
+DELIMITER ;
+
+SELECT CalculateAbsentDays('S101', 'April');
+
+SELECT DISTINCT 
+    s.student_ID, s.name, m.class_ID, m.subject_ID, m.marks
+FROM Students s
+JOIN Marks m ON s.student_ID = m.student_ID
+WHERE m.class_ID = 'SE' AND m.marks > 20;
+
+SELECT student_ID, name
+FROM Students
+WHERE name LIKE '_a%';
+
+SELECT AVG(a.No_Of_Days_Present) AS average_attendance_percentage
+FROM Attendance a
+JOIN Students s ON s.student_ID = a.student_ID
+WHERE s.class_ID = 'FY' AND a.month = 'March';
+
+SELECT DISTINCT s.name
+FROM Students s
+JOIN Marks m ON s.student_ID = m.student_ID
+WHERE m.marks < 10;
+
+SELECT s.name, SUM(m.marks) AS total_midterm_marks
+FROM Students s
+JOIN Marks m ON s.student_ID = m.student_ID
+WHERE m.class_ID = 'SE' AND m.exam_name = 'Midterm'
+GROUP BY s.student_ID, s.name
+ORDER BY total_midterm_marks DESC;
+
+-- ---------------------------------
+-- SC1 Part C
+-- ---------------------------------
+
+CREATE VIEW StudentAttendanceSummary AS
+SELECT 
+    s.student_ID,
+    s.name AS student_name,
+    c.class_ID,
+    a.No_Of_Days_Present AS total_present_days,
+    (30 - a.No_Of_Days_Present) AS total_absent_days,
+    a.month
+FROM Students s
+JOIN Attendance a ON s.student_ID = a.student_ID
+JOIN Classes c ON s.class_ID = c.class_ID;
+
+SELECT * FROM StudentAttendanceSummary;
+
+SELECT 
+    c.class_name,
+    COUNT(s.student_ID) AS number_of_students
+FROM Classes c
+LEFT JOIN Students s ON c.class_ID = s.class_ID
+GROUP BY c.class_name
+ORDER BY c.class_name;
+
+SELECT student_ID, name
+FROM Students
+WHERE name LIKE 'D%';
+
+SELECT COUNT(*) AS total_subjects_offered
+FROM Subjects;
+
+CREATE TABLE StudentClassHistory (
+    student_ID VARCHAR(20) NOT NULL,
+    old_class_ID VARCHAR(20),
+    new_class_ID VARCHAR(20),
+    change_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_ID) REFERENCES Students(student_ID),
+    FOREIGN KEY (old_class_ID) REFERENCES Classes(class_ID),
+    FOREIGN KEY (new_class_ID) REFERENCES Classes(class_ID)
+);
+
+DELIMITER //
+CREATE TRIGGER AfterUpdate
+AFTER UPDATE ON Students
+FOR EACH ROW
+BEGIN
+    IF OLD.class_ID <> NEW.class_ID THEN
+        INSERT INTO StudentClassHistory (student_ID, old_class_ID, new_class_ID, change_timestamp)
+        VALUES (NEW.student_ID, OLD.class_ID, NEW.class_ID, NOW());
+    END IF;
+END //
+DELIMITER ;
+
+SELECT 
+    s.name AS student_name,
+    m.subject_ID,
+    sub.subject_name,
+    m.marks
+FROM Marks m
+JOIN Students s ON m.student_ID = s.student_ID
+JOIN Subjects sub ON m.subject_ID = sub.subject_ID
+WHERE m.exam_name = 'Midterm'
+ORDER BY m.marks DESC
+LIMIT 3;
